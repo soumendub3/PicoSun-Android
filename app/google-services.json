@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "26655363866",
+    "project_id": "picosun-0456"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26655363866:android:b22553dadab03ee7",
+        "android_client_info": {
+          "package_name": "com.smallestwearable.picosun"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "26655363866-jgturvl008024vrg33i5qibenoc5pnhg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.smallestwearable.picosun",
+            "certificate_hash": "10C6424FC444EF4A7747346630368E77612C4BAF"
+          }
+        },
+        {
+          "client_id": "26655363866-am0ue7mdiumsu8glv14lc4vqprdt3gsv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeYj-UdOlebg6f6WauS-WLAMM_j_i86V0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

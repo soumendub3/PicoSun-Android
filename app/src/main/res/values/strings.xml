@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PicoSun</string>
+    <string name="sign_out_button_text">Logout</string>
+    <string name="profile_image">Profile</string>
+</resources>
