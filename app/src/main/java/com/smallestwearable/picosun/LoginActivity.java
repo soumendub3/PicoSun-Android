@@ -2,9 +2,12 @@ package com.smallestwearable.picosun;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +35,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 // A login screen that offers login via Google
@@ -38,12 +43,13 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         //GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
     private static final long SCAN_PERIOD = 5000; /* 5 seconds */
     private static final int REQUEST_ENABLE_BT = 1;
+    private boolean mScanning = false;
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mLEScanner;
     private ScanSettings settings;
     private List<ScanFilter> filters;
-
+    private Handler mHandler = new Handler();
 
     private static final int RC_SIGN_IN = 0;
     private static final String TAG = "LoginActivity";// Logcat tag
@@ -120,6 +126,33 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         btnSignOut.setVisibility(View.GONE);
         llProfileLayout.setVisibility(View.GONE);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
+        // fire an intent to display a dialog asking the user to grant permission to enable it.
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        } else {
+            mLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            settings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .build();
+            filters = new ArrayList<ScanFilter>();
+            scanLeDevice(true);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
+            scanLeDevice(false);
+        }
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -129,9 +162,51 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             case R.id.sign_out_button:
                 signOut();
                 break;
+            case R.id.scan_bt_button:
+                scanLeDevice(true);
+                break;
         }
     }
-/*
+
+    private void scanLeDevice(final boolean enable) {
+        if (enable) {
+            // Stops scanning after a pre-defined scan period.
+            mLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mLEScanner.stopScan(mScanCallback);
+                }
+            }, SCAN_PERIOD);
+            mScanning = true;
+            mLEScanner.startScan(mScanCallback);
+        } else {
+            mScanning = false;
+            mLEScanner.stopScan(mScanCallback);
+        }
+    }
+
+    private ScanCallback mScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            Log.i("callbackType", String.valueOf(callbackType));
+            Log.i("result", result.toString());
+            //BluetoothDevice btDevice = result.getDevice();
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            for (ScanResult sr : results) {
+                Log.i("ScanResult - Results", sr.toString());
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Log.e("Scan Failed", "Error Code: " + errorCode);
+        }
+    };
+    /*
     @Override
     public void onDestroy() {
         super.onDestroy();
