@@ -14,13 +14,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +65,9 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private ImageView imgProfile;
     private TextView txtName, txtEmail;
     private LinearLayout llProfileLayout;
+
+    public ArrayList<String> mArrayNewDev = new ArrayList<>();
+    private ArrayAdapter <String> aNewBTDev;
 
     /*
     // A flag indicating that a PendingIntent is in progress and prevents us
@@ -121,15 +127,23 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addApi(AppIndex.API).build();
 
+        // Create The Adapter with passing ArrayList as 3rd parameter
+        aNewBTDev = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, mArrayNewDev);
+        ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
+        lNewBTDev.setAdapter(aNewBTDev);// Set The Adapter
+
         //Update the UI
         btnSignIn.setVisibility(View.VISIBLE);
         btnSignOut.setVisibility(View.GONE);
         llProfileLayout.setVisibility(View.GONE);
+        lNewBTDev.setVisibility(View.GONE);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
@@ -141,7 +155,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                     .build();
             filters = new ArrayList<ScanFilter>();
-            scanLeDevice(true);
+            //scanLeDevice(true);
         }
     }
 
@@ -180,6 +194,12 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             }, SCAN_PERIOD);
             mScanning = true;
             mLEScanner.startScan(mScanCallback);
+            ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
+            lNewBTDev.setVisibility(View.VISIBLE);
+
+            aNewBTDev.setNotifyOnChange(true);
+            aNewBTDev.clear();
+            aNewBTDev.notifyDataSetChanged();
         } else {
             mScanning = false;
             mLEScanner.stopScan(mScanCallback);
@@ -189,9 +209,17 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private ScanCallback mScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
             Log.i("callbackType", String.valueOf(callbackType));
             Log.i("result", result.toString());
-            //BluetoothDevice btDevice = result.getDevice();
+            Log.i("Device Name",result.getDevice().getName().toString());
+            mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
+                    + "\n" + result.getDevice()
+                    + "\n" + result.getScanRecord().getManufacturerSpecificData()
+                    + "\n" + result.getScanRecord().getTxPowerLevel()
+                    + "\n" + result.getScanRecord().getServiceUuids());
+            lNewBTDev.invalidateViews();
+            aNewBTDev.notifyDataSetChanged();
         }
 
         @Override
@@ -204,6 +232,17 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         @Override
         public void onScanFailed(int errorCode) {
             Log.e("Scan Failed", "Error Code: " + errorCode);
+            switch (errorCode) {//TODO add toast for each fail mode
+                case 1:
+                    //Toast.makeText(this, "Scan is currently ongoing...", Toast.LENGTH_LONG).show();
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+            }
         }
     };
     /*
@@ -338,8 +377,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
             InputStream imageStream = null;
             try {
+                Log.i("Showing picture","TRUE");
                 imageStream = getContentResolver().openInputStream(uPhoto);
-                System.out.println(imageStream);
                 imgProfile.setImageBitmap(BitmapFactory.decodeStream(imageStream));
             } catch (FileNotFoundException e) {
                 Log.e("Image Display", "File not FOUND");
@@ -370,16 +409,20 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     }
 
     private void updateUI(boolean isSignedIn) {
+        ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
+
         if (isSignedIn) {
             btnSignIn.setVisibility(View.GONE);
             btnSignOut.setVisibility(View.VISIBLE);
             btnBTScan.setVisibility(View.VISIBLE);
             llProfileLayout.setVisibility(View.VISIBLE);
+            lNewBTDev.setVisibility(View.VISIBLE);
         } else {
             btnSignIn.setVisibility(View.VISIBLE);
             btnSignOut.setVisibility(View.GONE);
             btnBTScan.setVisibility(View.GONE);
             llProfileLayout.setVisibility(View.GONE);
+            lNewBTDev.setVisibility(View.GONE);
         }
     }
 }

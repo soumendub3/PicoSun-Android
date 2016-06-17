@@ -76,6 +76,11 @@
             android:layout_weight="1"/>
 
     </LinearLayout>
-
+    <ListView
+        android:id="@+id/NewBTDev"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:dividerHeight="0.1dp" >
+    </ListView>
 
 </LinearLayout>
