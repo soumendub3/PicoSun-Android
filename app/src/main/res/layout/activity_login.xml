@@ -60,6 +60,7 @@
         android:layout_marginBottom="10dp"/>
 
     <LinearLayout
+        android:id="@+id/llScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
@@ -76,6 +77,7 @@
             android:layout_weight="1"/>
 
     </LinearLayout>
+
     <ListView
         android:id="@+id/NewBTDev"
         android:layout_width="fill_parent"
@@ -83,4 +85,61 @@
         android:dividerHeight="0.1dp" >
     </ListView>
 
+    <LinearLayout
+        android:id="@+id/llData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:weightSum="2"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/uv_index"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/uv_index_header"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:textSize="20sp"
+                android:text="@string/sUVIndexHeader"/>
+            <TextView
+                android:id="@+id/uv_index_value"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:textSize="15sp"
+                android:text="@string/sUVIndex"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lux_index"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/lux_header"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:textSize="20sp"
+                android:text="@string/sLuxHeader"/>
+            <TextView
+                android:id="@+id/lux_value"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:textSize="15sp"
+                android:text="@string/sLux"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
 </LinearLayout>
+

@@ -1,12 +1,14 @@
 package com.smallestwearable.picosun;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
@@ -14,9 +16,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -63,11 +66,13 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private SignInButton btnSignIn;
     private Button btnSignOut, btnBTScan;
     private ImageView imgProfile;
-    private TextView txtName, txtEmail;
-    private LinearLayout llProfileLayout;
+    private TextView txtName, txtEmail, uvindex, lux;
+    private LinearLayout llProfile, llScan, llData;
 
     public ArrayList<String> mArrayNewDev = new ArrayList<>();
     private ArrayAdapter <String> aNewBTDev;
+
+    byte uvValue, uvValueOld, luxValue, luxValueOld;
 
     /*
     // A flag indicating that a PendingIntent is in progress and prevents us
@@ -88,7 +93,11 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         imgProfile = (ImageView) findViewById(R.id.user_ProfilePic);
         txtName = (TextView) findViewById(R.id.user_Name);
         txtEmail = (TextView) findViewById(R.id.user_Email);
-        llProfileLayout = (LinearLayout) findViewById(R.id.llProfile);
+        uvindex = (TextView) findViewById(R.id.uv_index_value);
+        lux = (TextView) findViewById(R.id.lux_value);
+        llProfile = (LinearLayout) findViewById(R.id.llProfile);
+        llData = (LinearLayout) findViewById(R.id.llProfile);
+        llScan = (LinearLayout) findViewById(R.id.llProfile);
 
         // Button click listeners
         findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -133,11 +142,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         lNewBTDev.setAdapter(aNewBTDev);// Set The Adapter
 
         //Update the UI
-        btnSignIn.setVisibility(View.VISIBLE);
-        btnSignOut.setVisibility(View.GONE);
-        llProfileLayout.setVisibility(View.GONE);
-        lNewBTDev.setVisibility(View.GONE);
-
+        updateUI(false);
     }
 
     @Override
@@ -157,6 +162,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             filters = new ArrayList<ScanFilter>();
             //scanLeDevice(true);
         }
+        uvValueOld = 0;
+        luxValueOld = 0;
     }
 
     @Override
@@ -213,13 +220,35 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             Log.i("callbackType", String.valueOf(callbackType));
             Log.i("result", result.toString());
             Log.i("Device Name",result.getDevice().getName().toString());
-            mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
-                    + "\n" + result.getDevice()
-                    + "\n" + result.getScanRecord().getManufacturerSpecificData()
-                    + "\n" + result.getScanRecord().getTxPowerLevel()
-                    + "\n" + result.getScanRecord().getServiceUuids());
-            lNewBTDev.invalidateViews();
-            aNewBTDev.notifyDataSetChanged();
+            //if (result.getDevice().getName().toString().equals("PWUD49A822A")) {
+            if (result.getDevice().getName().toString().equals("Shine")) {
+                mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
+                        + "\n" + result.getDevice());
+                        //+ "\n" + result.getScanRecord().getManufacturerSpecificData()
+                        //+ "\n" + result.getScanRecord().getTxPowerLevel()
+                        //+ "\n" + result.getScanRecord().getServiceUuids());
+                lNewBTDev.invalidateViews();
+                aNewBTDev.notifyDataSetChanged();
+
+                ScanRecord scanrecord = result.getScanRecord();
+                byte[] data = scanrecord.getManufacturerSpecificData().valueAt(0);
+                uvValue = data[1];
+                luxValue = data[3];
+                Log.i("Size of Mfg Data",Integer.toString(data.length));
+                Log.i("UV",String.valueOf(uvValue));
+                Log.i("Previous UV",String.valueOf(uvValueOld));
+                Log.i("Lux",String.valueOf(luxValue));
+
+                uvindex.setText(String.valueOf(uvValue));
+                lux.setText(String.valueOf(luxValue));
+
+                //Set notification if UV value changed
+                if (uvValueOld != uvValue){
+                    Log.i("Notification triggered","ID = 1");
+                    Notify("UV Update", "Current UV Index is : " + String.valueOf(uvValue), 1);
+                    uvValueOld = uvValue;
+                }
+            }
         }
 
         @Override
@@ -245,6 +274,33 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             }
         }
     };
+
+    private void Notify(String notificationTitle, String notificationMessage, int mId){
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.transparentlogo)
+                        .setContentTitle("PicoSun" + notificationTitle)
+                        .setContentText(notificationMessage)
+                        .setColor(0x00)
+                        .setLights(0xffff0000,100,900);
+        // Creates an explicit intent for an Activity in your app
+        Intent resultIntent = new Intent(this, Notification.class);
+
+        // The stack builder object will contain an artificial back stack for the started Activity.
+        // This ensures that navigating backward from the Activity leads out of your application to the Home screen.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(Notification.class);
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        // mId allows you to update the notification later on.
+        mNotificationManager.notify(mId, mBuilder.build());
+    }
     /*
     @Override
     public void onDestroy() {
@@ -415,13 +471,17 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             btnSignIn.setVisibility(View.GONE);
             btnSignOut.setVisibility(View.VISIBLE);
             btnBTScan.setVisibility(View.VISIBLE);
-            llProfileLayout.setVisibility(View.VISIBLE);
+            llProfile.setVisibility(View.VISIBLE);
+            llScan.setVisibility(View.VISIBLE);
+            llData.setVisibility(View.VISIBLE);
             lNewBTDev.setVisibility(View.VISIBLE);
         } else {
             btnSignIn.setVisibility(View.VISIBLE);
             btnSignOut.setVisibility(View.GONE);
             btnBTScan.setVisibility(View.GONE);
-            llProfileLayout.setVisibility(View.GONE);
+            llProfile.setVisibility(View.GONE);
+            llScan.setVisibility(View.GONE);
+            llData.setVisibility(View.GONE);
             lNewBTDev.setVisibility(View.GONE);
         }
     }

@@ -13,8 +13,8 @@
     <string name="sNewDevices">New Devices Found</string>
 
     <!-- Menu items -->
-    <string name="menu_connect">Connect</string>
-    <string name="menu_disconnect">Disconnect</string>
-    <string name="menu_scan">Scan</string>
-    <string name="menu_stop">Stop</string>
+    <string name="sUVIndexHeader">UV Index</string>
+    <string name="sUVIndex">99</string>
+    <string name="sLuxHeader">Lux</string>
+    <string name="sLux">-99999</string>
 </resources>
