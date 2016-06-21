@@ -219,34 +219,37 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
             Log.i("callbackType", String.valueOf(callbackType));
             Log.i("result", result.toString());
-            Log.i("Device Name",result.getDevice().getName().toString());
-            //if (result.getDevice().getName().toString().equals("PWUD49A822A")) {
-            if (result.getDevice().getName().toString().equals("Shine")) {
-                mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
-                        + "\n" + result.getDevice());
-                        //+ "\n" + result.getScanRecord().getManufacturerSpecificData()
-                        //+ "\n" + result.getScanRecord().getTxPowerLevel()
-                        //+ "\n" + result.getScanRecord().getServiceUuids());
-                lNewBTDev.invalidateViews();
-                aNewBTDev.notifyDataSetChanged();
+            if (result.getDevice().getName() != null) {
+                Log.i("Device Name", result.getDevice().getName());
+                if (result.getDevice().getName().equals("PWUD49A822A")) {
+                    //if (result.getDevice().getName().toString().equals("Shine")) {
+                    mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
+                            + "\n" + result.getDevice());
+                    //+ "\n" + result.getScanRecord().getManufacturerSpecificData()
+                    //+ "\n" + result.getScanRecord().getTxPowerLevel()
+                    //+ "\n" + result.getScanRecord().getServiceUuids());
+                    lNewBTDev.invalidateViews();
+                    aNewBTDev.notifyDataSetChanged();
 
-                ScanRecord scanrecord = result.getScanRecord();
-                byte[] data = scanrecord.getManufacturerSpecificData().valueAt(0);
-                uvValue = data[1];
-                luxValue = data[3];
-                Log.i("Size of Mfg Data",Integer.toString(data.length));
-                Log.i("UV",String.valueOf(uvValue));
-                Log.i("Previous UV",String.valueOf(uvValueOld));
-                Log.i("Lux",String.valueOf(luxValue));
+                    ScanRecord scanrecord = result.getScanRecord();
+                    byte[] data = scanrecord.getManufacturerSpecificData().valueAt(0);
+                    uvValue = data[1];
+                    luxValue = data[3];
+                    luxValue += 256 * data[2];
+                    Log.i("Size of Mfg Data", Integer.toString(data.length));
+                    Log.i("UV", String.valueOf(uvValue));
+                    Log.i("Previous UV", String.valueOf(uvValueOld));
+                    Log.i("Lux", String.valueOf(luxValue));
 
-                uvindex.setText(String.valueOf(uvValue));
-                lux.setText(String.valueOf(luxValue));
+                    uvindex.setText(String.valueOf(uvValue));
+                    lux.setText(String.valueOf(luxValue));
 
-                //Set notification if UV value changed
-                if (uvValueOld != uvValue){
-                    Log.i("Notification triggered","ID = 1");
-                    Notify("UV Update", "Current UV Index is : " + String.valueOf(uvValue), 1);
-                    uvValueOld = uvValue;
+                    //Set notification if UV value changed
+                    if (uvValueOld != uvValue) {
+                        Log.i("Notification triggered", "ID = 1");
+                        Notify("UV Update", "Current UV Index is : " + String.valueOf(uvValue), 1);
+                        uvValueOld = uvValue;
+                    }
                 }
             }
         }
@@ -278,7 +281,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private void Notify(String notificationTitle, String notificationMessage, int mId){
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.transparentlogo)
-                        .setContentTitle("PicoSun" + notificationTitle)
+                        .setContentTitle("PicoSun " + notificationTitle)
                         .setContentText(notificationMessage)
                         .setColor(0x00)
                         .setLights(0xffff0000,100,900);
