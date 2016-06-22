@@ -12,9 +12,19 @@
     <string name="sPairedDevices">Paired Devices</string>
     <string name="sNewDevices">New Devices Found</string>
 
-    <!-- Menu items -->
+    <!-- Scanned items -->
     <string name="sUVIndexHeader">UV Index</string>
     <string name="sUVIndex">99</string>
-    <string name="sLuxHeader">Lux</string>
-    <string name="sLux">-99999</string>
+    <string name="sLuxHeader">Lux Index</string>
+    <string name="sLux">99</string>
+    <string name="sTempHeader">Temperature</string>
+    <string name="sTemp">99</string>
+    <string name="sPositionHeader">Position</string>
+    <string name="sPos">99</string>
+    <string name="sBatteryHeader">Battery</string>
+    <string name="sBattery">99</string>
+
+    <string name="action_scan">Scan</string>
+    <string name="action_settings">Settings</string>
+
 </resources>

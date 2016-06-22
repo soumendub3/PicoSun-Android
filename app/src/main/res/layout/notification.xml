@@ -6,6 +6,6 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="400dp"
-        android:text="Your detailed notification goes here." />
+        android:text="Your detailed notification goes here..." />
 
 </LinearLayout>

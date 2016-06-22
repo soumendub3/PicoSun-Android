@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
@@ -20,6 +19,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -45,9 +46,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 // A login screen that offers login via Google
-public class LoginActivity extends Activity implements View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
         //GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
-    private static final long SCAN_PERIOD = 5000; /* 5 seconds */
+    private static final long SCAN_PERIOD = 60000; /* 5 seconds */
     private static final int REQUEST_ENABLE_BT = 1;
     private boolean mScanning = false;
 
@@ -72,7 +73,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     public ArrayList<String> mArrayNewDev = new ArrayList<>();
     private ArrayAdapter <String> aNewBTDev;
 
-    byte uvValue, uvValueOld, luxValue, luxValueOld;
+    int uvValue, uvValueOld, luxValue, luxValueOld;
 
     /*
     // A flag indicating that a PendingIntent is in progress and prevents us
@@ -84,6 +85,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
@@ -96,8 +98,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         uvindex = (TextView) findViewById(R.id.uv_index_value);
         lux = (TextView) findViewById(R.id.lux_value);
         llProfile = (LinearLayout) findViewById(R.id.llProfile);
-        llData = (LinearLayout) findViewById(R.id.llProfile);
-        llScan = (LinearLayout) findViewById(R.id.llProfile);
+        llData = (LinearLayout) findViewById(R.id.llData);
+        llScan = (LinearLayout) findViewById(R.id.llScan);
 
         // Button click listeners
         findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -216,26 +218,22 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private ScanCallback mScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
-            Log.i("callbackType", String.valueOf(callbackType));
-            Log.i("result", result.toString());
             if (result.getDevice().getName() != null) {
-                Log.i("Device Name", result.getDevice().getName());
                 if (result.getDevice().getName().equals("PWUD49A822A")) {
-                    //if (result.getDevice().getName().toString().equals("Shine")) {
+                    Log.i("callbackType", String.valueOf(callbackType));
+                    Log.i("result", result.toString());
+                    Log.i("Device Name", result.getDevice().getName());
+
                     mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
                             + "\n" + result.getDevice());
-                    //+ "\n" + result.getScanRecord().getManufacturerSpecificData()
-                    //+ "\n" + result.getScanRecord().getTxPowerLevel()
-                    //+ "\n" + result.getScanRecord().getServiceUuids());
+                    ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
                     lNewBTDev.invalidateViews();
                     aNewBTDev.notifyDataSetChanged();
 
-                    ScanRecord scanrecord = result.getScanRecord();
-                    byte[] data = scanrecord.getManufacturerSpecificData().valueAt(0);
-                    uvValue = data[1];
-                    luxValue = data[3];
-                    luxValue += 256 * data[2];
+                    byte[] data = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
+                    uvValue = (int)data[1];
+                    //luxValue = data[4];
+                    luxValue = ((data[3] * 256 + data[4])<<2);
                     Log.i("Size of Mfg Data", Integer.toString(data.length));
                     Log.i("UV", String.valueOf(uvValue));
                     Log.i("Previous UV", String.valueOf(uvValueOld));
