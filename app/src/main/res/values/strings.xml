@@ -3,6 +3,9 @@
     <string name="sign_out_button_text">Logout</string>
     <string name="profile_image">Profile</string>
     <string name="bt_scan_button_text">Scan</string>
+    <string name="bt_red_led_button_text">Red</string>
+    <string name="bt_yellow_led_button_text">Yellow</string>
+    <string name="bt_green_led_button_text">Green</string>
     <string name="ble_not_supported">BLE not supported</string>
     <string name="error_bluetooth_not_supported">Bluetooth not supported</string>
     <string name="unknown_device">Unknown device</string>

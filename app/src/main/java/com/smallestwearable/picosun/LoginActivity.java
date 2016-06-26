@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -17,11 +18,14 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -44,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 // A login screen that offers login via Google
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
@@ -66,6 +71,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     private SignInButton btnSignIn;
     private Button btnSignOut, btnBTScan;
+    private Button btnRedLED, btnYellowLED, btnGreenLED;
     private ImageView imgProfile;
     private TextView txtName, txtEmail, uvindex, lux;
     private LinearLayout llProfile, llScan, llData;
@@ -92,6 +98,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         btnSignIn = (SignInButton) findViewById(R.id.sign_in_button);
         btnSignOut = (Button) findViewById(R.id.sign_out_button);
         btnBTScan = (Button) findViewById(R.id.scan_bt_button);
+        btnRedLED = (Button) findViewById(R.id.red_led_bt_button);
+        btnYellowLED = (Button) findViewById(R.id.yellow_led_bt_button);
+        btnGreenLED = (Button) findViewById(R.id.green_led_bt_button);
         imgProfile = (ImageView) findViewById(R.id.user_ProfilePic);
         txtName = (TextView) findViewById(R.id.user_Name);
         txtEmail = (TextView) findViewById(R.id.user_Email);
@@ -105,6 +114,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.sign_in_button).setOnClickListener(this);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
         findViewById(R.id.scan_bt_button).setOnClickListener(this);
+        findViewById(R.id.red_led_bt_button).setOnClickListener(this);
 
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
@@ -188,7 +198,42 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             case R.id.scan_bt_button:
                 scanLeDevice(true);
                 break;
+            case R.id.red_led_bt_button:
+                toggleRedLED();
+                break;
         }
+    }
+/*
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate our menu from the resources by using the menu inflater.
+        getMenuInflater().inflate(R.menu.main, menu);
+
+        // It is also possible add items here. Use a generated id from
+        // resources (ids.xml) to ensure that all menu ids are distinct.
+        MenuItem locationItem = menu.add(0, R.id.menu_location, 0, R.string.menu_location);
+        locationItem.setIcon(R.drawable.ic_action_location);
+
+        // Need to use MenuItemCompat methods to call any action item related methods
+        MenuItemCompat.setShowAsAction(locationItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+        return true;
+    }
+*/
+    private void toggleRedLED(){
+        if(mBluetoothAdapter.isDiscovering())
+            mBluetoothAdapter.cancelDiscovery();
+        BluetoothDevice picoWearUV = mBluetoothAdapter.getRemoteDevice(String.valueOf("EC:95:D4:9A:82:2A"));
+        if (picoWearUV.getBondState() == BluetoothDevice.BOND_NONE){
+            picoWearUV.createBond();
+        }
+
+/*
+        if(picoWearUV.getBondState()== BluetoothDevice.BOND_BONDED) {
+            ParcelUuid[] uuid = picoWearUV.getUuids();
+            picoWearUV.createRfcommSocketToServiceRecord();
+        }
+*/
     }
 
     private void scanLeDevice(final boolean enable) {
@@ -202,9 +247,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
             }, SCAN_PERIOD);
             mScanning = true;
-            mLEScanner.startScan(mScanCallback);
-            ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
-            lNewBTDev.setVisibility(View.VISIBLE);
+
+            //Set up scan settings and filter for a PicoWear device
+            settings = new ScanSettings.Builder()
+                    .setReportDelay(0)
+                    .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                    .build();
+            ScanFilter filter = new ScanFilter.Builder()
+                    .setDeviceName("PWUD49A822A")
+                    .build();
+            filters.add(filter);
+            mLEScanner.startScan(filters, settings, mScanCallback);
 
             aNewBTDev.setNotifyOnChange(true);
             aNewBTDev.clear();
@@ -224,16 +277,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     Log.i("result", result.toString());
                     Log.i("Device Name", result.getDevice().getName());
 
+                    mArrayNewDev.clear();
                     mArrayNewDev.add(result.getDevice().getName() + "    " + result.getRssi()
                             + "\n" + result.getDevice());
                     ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
                     lNewBTDev.invalidateViews();
-                    aNewBTDev.notifyDataSetChanged();
 
                     byte[] data = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
                     uvValue = (int)data[1];
                     //luxValue = data[4];
-                    luxValue = ((data[3] * 256 + data[4])<<2);
+                    luxValue = (((int)data[3] * 256 + (int)data[4]) * 2);
                     Log.i("Size of Mfg Data", Integer.toString(data.length));
                     Log.i("UV", String.valueOf(uvValue));
                     Log.i("Previous UV", String.valueOf(uvValueOld));
@@ -472,6 +525,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             btnSignIn.setVisibility(View.GONE);
             btnSignOut.setVisibility(View.VISIBLE);
             btnBTScan.setVisibility(View.VISIBLE);
+            btnRedLED.setVisibility(View.VISIBLE);
+            btnYellowLED.setVisibility(View.VISIBLE);
+            btnGreenLED.setVisibility(View.VISIBLE);
             llProfile.setVisibility(View.VISIBLE);
             llScan.setVisibility(View.VISIBLE);
             llData.setVisibility(View.VISIBLE);
@@ -480,6 +536,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             btnSignIn.setVisibility(View.VISIBLE);
             btnSignOut.setVisibility(View.GONE);
             btnBTScan.setVisibility(View.GONE);
+            btnRedLED.setVisibility(View.GONE);
+            btnYellowLED.setVisibility(View.GONE);
+            btnGreenLED.setVisibility(View.GONE);
             llProfile.setVisibility(View.GONE);
             llScan.setVisibility(View.GONE);
             llData.setVisibility(View.GONE);

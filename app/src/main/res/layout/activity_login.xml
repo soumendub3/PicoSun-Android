@@ -25,7 +25,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
             android:orientation="vertical"
             android:layout_weight="2" >
 
@@ -63,9 +62,9 @@
         android:id="@+id/llScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="0dp"
         android:orientation="horizontal"
-        android:weightSum="2">
+        android:weightSum="4">
 
         <Button
             android:id="@+id/scan_bt_button"
@@ -73,8 +72,35 @@
             android:layout_height="wrap_content"
             android:text="@string/bt_scan_button_text"
             android:visibility="gone"
-            android:layout_marginBottom="10dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/red_led_bt_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/bt_red_led_button_text"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/yellow_led_bt_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/bt_yellow_led_button_text"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/green_led_bt_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/bt_green_led_button_text"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:layout_marginBottom="10dp" />
 
     </LinearLayout>
 
@@ -87,54 +113,90 @@
 
     <LinearLayout
         android:id="@+id/llData"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:weightSum="1.0">
 
-        <LinearLayout
-            android:id="@+id/uv_index"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/uv_index_header"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:textSize="20sp"
-                android:text="@string/sUVIndexHeader"/>
-            <TextView
-                android:id="@+id/uv_index_value"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:textSize="15sp"
-                android:text="@string/sUVIndex"/>
-        </LinearLayout>
+        <android.support.v7.widget.CardView
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/card_view_uv_index"
+            android:layout_gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="120dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            card_view:cardBackgroundColor="#11cd2626"
+            card_view:cardCornerRadius="4dp">
 
-        <LinearLayout
-            android:id="@+id/lux_index"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/lux_header"
-                android:layout_width="fill_parent"
+            <LinearLayout
+                android:id="@+id/uv_index"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:textSize="20sp"
-                android:text="@string/sLuxHeader"/>
-            <TextView
-                android:id="@+id/lux_value"
-                android:layout_width="fill_parent"
+                android:layout_marginStart="10dp"
+                android:padding="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/uv_index_header"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:textSize="20sp"
+                    android:textAlignment="center"
+                    android:text="@string/sUVIndexHeader"/>
+                <TextView
+                    android:id="@+id/uv_index_value"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:textSize="35sp"
+                    android:textAlignment="center"
+                    android:text="@string/sUVIndex"/>
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/card_view_lux_index"
+            android:layout_gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="120dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            card_view:cardBackgroundColor="#11cd2626"
+            card_view:cardCornerRadius="4dp">
+
+            <LinearLayout
+                android:id="@+id/lux_index"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:textSize="15sp"
-                android:text="@string/sLux"/>
-        </LinearLayout>
+                android:layout_marginStart="10dp"
+                android:padding="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/lux_header"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:textSize="20sp"
+                    android:textAlignment="center"
+                    android:text="@string/sLuxHeader"/>
+                <TextView
+                    android:id="@+id/lux_value"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:textSize="35sp"
+                    android:textAlignment="center"
+                    android:text="@string/sLux"/>
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
+<!--
+
+-->
     </LinearLayout>
 </LinearLayout>
 
