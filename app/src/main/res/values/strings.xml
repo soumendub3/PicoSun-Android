@@ -30,4 +30,10 @@
     <string name="action_scan">Scan</string>
     <string name="action_settings">Settings</string>
 
+<!--    Location related strings -->
+    <string name="use_location">Use location?</string>
+    <string name="location_msg">This App wants to change your device settings to use\nGPS, Wi-Fi and cell networks for location</string>
+    <string name="enable">Enable</string>
+    <string name="cancel">Cancel</string>
+
 </resources>

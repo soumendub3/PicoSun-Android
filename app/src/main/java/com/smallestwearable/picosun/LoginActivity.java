@@ -13,14 +13,22 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -42,6 +50,22 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -51,10 +75,13 @@ import java.util.List;
 import java.util.UUID;
 
 // A login screen that offers login via Google
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener,
+        //GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        OnMapReadyCallback {
         //GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
     private static final long SCAN_PERIOD = 60000; /* 5 seconds */
-    private static final int REQUEST_ENABLE_BT = 1;
+    protected static final int REQUEST_ENABLE_BT = 1;
+    protected static final int REQUEST_CHECK_SETTINGS = 0x2;
     private boolean mScanning = false;
 
     private BluetoothAdapter mBluetoothAdapter;
@@ -81,6 +108,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     int uvValue, uvValueOld, luxValue, luxValueOld;
 
+    GoogleMap googleMap;
+    Location mLastLocation;
     /*
     // A flag indicating that a PendingIntent is in progress and prevents us
     // from starting further intents.
@@ -146,6 +175,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 //.addOnConnectionFailedListener(this)
                 //.enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .addApi(LocationServices.API)
                 .addApi(AppIndex.API).build();
 
         // Create The Adapter with passing ArrayList as 3rd parameter
@@ -153,6 +183,51 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         ListView lNewBTDev=(ListView)findViewById(R.id.NewBTDev);
         lNewBTDev.setAdapter(aNewBTDev);// Set The Adapter
 
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mMap);
+        mapFragment.getMapAsync(this);
+
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        final PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+
+                final Status status = result.getStatus();
+                Log.i("Location Setting Status",String.valueOf(status));
+                final LocationSettingsStates LS_state = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can initialize location
+                        // requests here. //TODO Initialize location requests here
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the user
+                        // a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(LoginActivity.this, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
         //Update the UI
         updateUI(false);
     }
@@ -178,6 +253,42 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         luxValueOld = 0;
     }
 
+/*
+    private void GoogleApiClient.ConnectionCallbacks() {
+        @Override
+        protected void onConnectionSuspended(); {
+            super.onConnectionSuspended();
+        };
+    }
+    @Override
+    public void onConnected (Bundle connectionHint) {
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+    }
+
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mLastLocation != null) {
+            //mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
+            //mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
+            double latitude = mLastLocation.getLatitude();
+            double longitude = mLastLocation.getLongitude();
+            Log.i("Location Lat:", String.valueOf(latitude));
+            Log.i("Location Lon:", String.valueOf(longitude));
+
+            LatLng latLng = new LatLng(latitude, longitude);
+            googleMap.addMarker(new MarkerOptions().position(latLng));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        }
+
+    }
+*/
     @Override
     protected void onPause() {
         super.onPause();
@@ -185,6 +296,43 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             scanLeDevice(false);
         }
     }
+
+/*
+    public void onConnected(Bundle connectionHint) {
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            //mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
+            //mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
+            Log.i("Location Lat:",String.valueOf(mLastLocation.getLatitude()));
+            Log.i("Location Lon:",String.valueOf(mLastLocation.getLongitude()));
+        }
+    }
+*/
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        double latitude = 29.585219;
+        double longitude = -95.129711;
+        LatLng latLng = new LatLng(latitude, longitude);
+        map.addMarker(new MarkerOptions().position(latLng).title("Home"));
+        map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        map.animateCamera(CameraUpdateFactory.zoomTo(15));
+    }
+
+/*
+    @Override
+    public void onLocationChanged(Location location) {
+        TextView locationTv = (TextView) findViewById(R.id.latlongLocation);
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+        LatLng latLng = new LatLng(latitude, longitude);
+        googleMap.addMarker(new MarkerOptions().position(latLng));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        locationTv.setText("Latitude:" + latitude + ", Longitude:" + longitude);
+    }
+*/
 
     @Override
     public void onClick(View v) {
@@ -254,7 +402,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                     .build();
             ScanFilter filter = new ScanFilter.Builder()
-                    .setDeviceName("PWUD49A822A")
+                    .setDeviceName("PicoWear_01")
                     .build();
             filters.add(filter);
             mLEScanner.startScan(filters, settings, mScanCallback);
@@ -272,7 +420,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             if (result.getDevice().getName() != null) {
-                if (result.getDevice().getName().equals("PWUD49A822A")) {
+                if (result.getDevice().getName().equals("PicoWear_01")) {
                     Log.i("callbackType", String.valueOf(callbackType));
                     Log.i("result", result.toString());
                     Log.i("Device Name", result.getDevice().getName());
@@ -466,6 +614,27 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
         }
+
+        if (requestCode == REQUEST_CHECK_SETTINGS){
+            final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+            switch (requestCode) {
+                case REQUEST_CHECK_SETTINGS:
+                    switch (resultCode) {
+                        case Activity.RESULT_OK:
+                            // All required changes were successfully made
+                            //GetUserLocation();//TODO: FINALLY YOUR OWN METHOD TO GET YOUR USER LOCATION HERE
+                            break;
+                        case Activity.RESULT_CANCELED:
+                            // The user was asked to change settings, but chose not to
+                            Toast.makeText(LoginActivity.this, "Need location to work ... quitting App", Toast.LENGTH_LONG).show();
+                            finish();
+                        default:
+                            break;
+                    }
+                    break;
+            }
+        }
+
     }
 
     private void handleSignInResult(GoogleSignInResult result) {

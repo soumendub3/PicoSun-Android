@@ -193,10 +193,34 @@
                     android:text="@string/sLux"/>
             </LinearLayout>
         </android.support.v7.widget.CardView>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/llMap"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_margin="10dp">
+
+        <fragment
+            android:id="@+id/mMap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            class="com.google.android.gms.maps.SupportMapFragment" />
 
 <!--
-
+        <TextView
+            android:id="@+id/latlongLocation"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:background="#ff058fff"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:textColor="#ffffffff" />
 -->
+    </RelativeLayout>
+
     </LinearLayout>
-</LinearLayout>
 
